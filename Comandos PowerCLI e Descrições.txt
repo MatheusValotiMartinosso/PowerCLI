@@ -1,0 +1,151 @@
+Comandos PowerCLI e Descrições
+
+Comando:
+
+$cred = Get-Credential
+Connect-VIServer -Server "mtz-vcsa-001.gruponp.local" -Credential $cred
+
+Descrição:
+Conecta ao vCenter Server com usuário e senha fornecidos.
+
+Comando:
+$poweredOffVMs = Get-VM | Where-Object {
+    $_.PowerState -eq "PoweredOff" -and
+    $_.Name -notmatch "GI|cp|vCLS|Rock|template|teste|pan"
+}
+
+if ($poweredOffVMs.Count -eq 0) {
+    Write-Output ""
+    Write-Output "Nenhuma VM desligada"
+     Write-Output ""
+} else {
+    $poweredOffVMs
+}
+
+Descrição:
+Lista todas as VMs que estão desligadas.
+
+Comando:
+Get-VM
+
+Descrição:
+Lista todas as VMs.
+
+Comando:
+Get-Datastore
+
+Descrição:
+Lista todos os datastores disponíveis.
+
+Comando:
+Get-VMhost
+
+Descrição:
+Lista todos os hosts ESXi conectados ao vCenter.
+
+Comando:
+$exportPath = 'C:\Users\mvmartinosso\Documents\VMs_PowerOff.csv'
+Get-VM | Where-Object { $_.PowerState -eq "PoweredOff" } |
+Select-Object Name, PowerState |
+Export-Csv -Path $exportPath -NoTypeInformation -Encoding UTF8
+Write-Output "Exportado com sucesso para: $exportPath"
+
+Descrição:
+Gera um relatório em CSV com as VMs desligadas.
+
+Comando:
+Get-VM -Name "MTZ-SUPTEC-02" | Format-List *
+
+Descrição:
+Mostra todas as informações detalhadas da VM chamada MTZ-SUPTEC-02.
+
+Comando:
+Get-VM -Name "MTZ-SUPTEC-02" | Select-Object Name, PowerState,
+@{Name="IP"; Expression={$_.Guest.IPAddress}},
+@{Name="SistemaOperacional"; Expression={$_.Guest.OSFullName}}
+
+Descrição:
+Exibe o nome, estado, IP e sistema operacional da VM MTZ-SUPTEC-02.
+
+Comando:
+Get-Datastore |Sort-Object -Property FreeSpaceGB -Descending | Select-Object Name,
+@{Name = "Espaço Livre (GB)"; Expression = { [math]::Round($_.FreeSpaceGB, 2) }},
+@{Name = "Espaço Total (GB)"; Expression = { [math]::Round($_.CapacityGB, 2) }}
+
+Descrição:
+Lista datastores ordenados por espaço livre em GB.
+
+Comando:
+Get-Datastore | Sort-Object -Property FreeSpaceGB -Descending | Select-Object Name,
+@{Name = "Espaço Livre (TB)"; Expression = { [math]::Round($_.FreeSpaceGB / 1024, 2) }},
+@{Name = "Espaço Total (TB)"; Expression = { [math]::Round($_.CapacityGB / 1024, 2) }}
+
+Descrição:
+Lista datastores ordenados por espaço livre em TB.
+
+Comando:
+$exportPath = 'C:\Users\mvmartinosso\Documents\VMs_NoVMTools.csv'
+Get-VM | Where-Object { $_.ExtensionData.Guest.ToolsStatus -ne "toolsOk" } |
+Select Name, @{Name="ToolsStatus";Expression={ $_.ExtensionData.Guest.ToolsStatus }} |
+Export-Csv -Path $exportPath -NoTypeInformation -Encoding UTF8
+Write-Output "Exportado com sucesso para: $exportPath"
+
+Descrição:
+Gera relatório com VMs sem VMware Tools funcionando corretamente.
+
+Comando:
+Get-VM | Where-Object {
+$_.PowerState -eq "PoweredOn" -and
+$_.ExtensionData.Runtime.BootTime -lt (Get-Date).AddDays(-365)
+} | Select Name, @{Name="Uptime (dias)";Expression={ (New-TimeSpan -Start $_.ExtensionData.Runtime.BootTime).Days }}
+
+Descrição:
+Lista VMs que estão ligadas há mais de um ano.
+
+Comando:
+$pastasVazias = Get-Folder -Type VM | Where-Object {
+$_.ExtensionData.ChildEntity.Count -eq 0 -and
+$_.Name -notmatch "DELETAR|discovered|TEMPLATE|REST|NOVAS|DR|PROXIES|GRUPONP"
+}
+if ($pastasVazias.Count -gt 0) {
+$pastasVazias | Select-Object Name, @{Name="vCenter"; Expression = { $_.Uid.Split("@")[1] }}
+} else {
+Write-Output "Todas pastas vazias apagadas"
+}
+
+Descrição:
+Lista pastas de VMs que estão vazias, excluindo algumas por padrão.
+
+Comando:
+Get-VM | Get-Snapshot | Where-Object {
+$_.Created -lt (Get-Date).AddDays(-1)
+} | Select-Object VM, Name, Created, Description
+
+Descrição:
+Lista snapshots criados há mais de 1 dia.
+
+Comando:
+$exportPath = 'C:\Users\mvmartinosso\Documents\PowerCLI\Excel\VMunder2vCPU.csv'
+Get-VM | Where-Object {
+$_.NumCpu -lt 4 -and $_.Guest.OSFullName -like "Windows*"
+} | Select-Object Name, NumCPU, @{Name="OS";Expression={$_.Guest.OSFullName}} |
+Export-Csv -Path $exportPath -NoTypeInformation -Encoding UTF8
+Write-Output "Exportado com sucesso para: $exportPath"
+
+Descrição:
+Exporta VMs com menos de 4 CPUs e sistema operacional Windows para CSV.
+
+Comando:
+$customAttributeName = "Centro de Custo"
+$exportPath = 'C:\Users\mvmartinosso\Documents\VMs_custom.csv'
+Get-VM | Where-Object {
+$_.CustomFields -and 
+$_.CustomFields.ContainsKey($customAttributeName) -and 
+[string]::IsNullOrEmpty($_.CustomFields[$customAttributeName]) -and
+($_.Name -notlike "TESTE*" -and $_.Name -notlike "vCLS*")
+} | Select-Object Name |
+Export-Csv -Path $exportPath -NoTypeInformation -Encoding UTF8
+Write-Output "Exportado com sucesso para: $exportPath"
+
+Descrição:
+Exporta VMs com atributo 'Centro de Custo' vazio, excluindo nomes padrão
