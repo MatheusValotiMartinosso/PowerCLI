@@ -69,16 +69,17 @@ Exibe o nome, estado, IP e sistema operacional da VM MTZ-SUPTEC-02.
 
 Comando:
 Get-Datastore |Sort-Object -Property FreeSpaceGB -Descending | Select-Object Name,
-@{Name = "Espaço Livre (GB)"; Expression = { [math]::Round($_.FreeSpaceGB, 2) }},
-@{Name = "Espaço Total (GB)"; Expression = { [math]::Round($_.CapacityGB, 2) }}
+@{Name = "Espaço Total (GB)"; Expression = { [math]::Round($_.CapacityGB, 2) }},
+@{Name = "Espaço Livre (GB)"; Expression = { [math]::Round($_.FreeSpaceGB, 2) }}
+
 
 Descrição:
 Lista datastores ordenados por espaço livre em GB.
 
 Comando:
 Get-Datastore | Sort-Object -Property FreeSpaceGB -Descending | Select-Object Name,
-@{Name = "Espaço Livre (TB)"; Expression = { [math]::Round($_.FreeSpaceGB / 1024, 2) }},
-@{Name = "Espaço Total (TB)"; Expression = { [math]::Round($_.CapacityGB / 1024, 2) }}
+@{Name = "Espaço Total (TB)"; Expression = { [math]::Round($_.CapacityGB / 1024, 2) }},
+@{Name = "Espaço Livre (TB)"; Expression = { [math]::Round($_.FreeSpaceGB / 1024, 2) }}
 
 Descrição:
 Lista datastores ordenados por espaço livre em TB.
